@@ -1,0 +1,10 @@
+description.tex
+manuscript.pdf
+*.log
+*.aux
+*.dvi
+*.out
+*.blg
+*.bbl
+*.xbb
+*.synctex.gz
