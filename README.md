@@ -1,4 +1,4 @@
-# GPU-SWoPP-2018
+# micro-Elixir-ZEAM-plan
 
 ## インストール
 
@@ -33,8 +33,8 @@ $ brew install imagemagick
 これらが準備できたあとは，下記のようにインストールしてください。
 
 ```bash
-$ git clone git@github.com:zeam-vm/GPU-SWoPP-2018.git
-$ cd GPU-SWoPP-2018
+$ git clone git@github.com:zeam-vm/micro-Elixir-ZEAM-plan.git
+$ cd micro-Elixir-ZEAM-plan
 ```
 
 ## コンパイル方法
@@ -46,11 +46,11 @@ $ open manuscript.pdf
 
 ## タイトルや著者，スタイル等を変更する場合
 
-[manuscript.tex](https://github.com/zacky1972/GPU-SWoPP-2018/blob/master/manuscript.tex) を編集してください。
+[manuscript.tex](https://github.com/zacky1972/micro-Elixir-ZEAM-plan/blob/master/manuscript.tex) を編集してください。
 
 ## 本文を編集する場合
 
-[description.md](https://github.com/zacky1972/GPU-SWoPP-2018/blob/master/description.md) を編集してください。Markdown 記法で記述できます。
+[description.md](https://github.com/zacky1972/micro-Elixir-ZEAM-plan/blob/master/description.md) を編集してください。Markdown 記法で記述できます。
 
 ## 画像の追加
 
