@@ -1,7 +1,7 @@
 # はじめに
 \label{sec:introduction}
 
-Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．本論文では，第\ref{sec:Elixir}章にて Elixir の特長を詳述する．
+Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．本論文では，第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.132749}について説明する．
 
 Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}．本論文では，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換実行系について概説する．
 
@@ -342,6 +342,14 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 # まとめ
 \label{sec:summary}
 
+本論文では次のことを述べた:
+
+* 第\ref{sec:Elixir}章では，Elixir における MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.132749}について述べた．
+* 第\ref{sec:ErlangVM}章では，Elixir を支える処理系である Erlang VM とその特長である並行プログラミングに優れている点と耐障害性が高い点について説明した．
+* 第\ref{sec:implementationStrategy}章では，micro Elixir / ZEAM の実装戦略について，「現在主流の Erlang VM から円滑に移行することができるのか？」「優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？」「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」の3つの問いに答える形で説明した．
+* 第\ref{sec:analyzer}章と第\ref{sec:generator}章で，micro Elixir / ZEAM の基本構成と実装方針について解説した．
+* 第\ref{sec:parallelismCategories}章では Elixir コードから読取れる3種類の並列性について紹介し，この3分類に沿って，第\ref{sec:instructionScheduling}章で命令並列性に基づく静的命令スケジューリングについて，第\ref{sec:Hastega}章で CPU / GPU を統合して CPU バウンド処理を高速化する超並列高速実行処理系 Hastega について，第\ref{sec:Sabotender}章で I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender についてそれぞれ紹介した．
+* 第\ref{sec:executionTimeEstimation}章で実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性について議論し，第\ref{sec:superInlining}章でプロセス間通信を含む超インライン展開について提案した．第\ref{sec:globalOptimization}章ではそれらを前提とした大域的なキャッシュメモリとI/Oの最適化の可能性について議論した．
 
 # 将来課題
 \label{sec:futureWorks}
