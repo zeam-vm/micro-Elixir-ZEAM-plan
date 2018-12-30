@@ -93,6 +93,9 @@ Elixir は，このような Erlang VM の特長を継承している．
 以下に各問いについて答えていく．
 
 ## Erlang VM からの円滑な移行戦略
+\label{sec:smoothStrategy}
+
+まずは「現在主流の Erlang VM から円滑に移行することはできるのか？」という問いに答える．
 
 我々は Erlang VM 互換の処理系を一から研究開発するアプローチの問題点を次のように考えた:
 
@@ -104,12 +107,56 @@ Elixir は，このような Erlang VM の特長を継承している．
 
 1. Elixir のサブセットのプログラミング言語である micro Elixir を新たに定義する
 2. ZEAM は Elixir プロジェクト中のコードの一部を，NIF (Native Implemented Function: ネイティブコードで実装された関数) にコンパイルして Erlang VM から呼び出せるようにする処理系として，当面の間研究開発を進める
-3. ZEAM は，与えられたコードを解析して，micro Elixir の言語仕様の範囲内のコードと範囲外のコードに分割する．前者はネイティブコードにコンパイルして NIF として定義する．NIF呼出しコードと後者のコードを繋ぎ合わせた Elixir コードを生成し，Erlang VM で実行するようにする
-4. ZEAM の最初のアプリケーションを超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)とすることで，最初から micro Elixir / ZEAM を利用する動機を作る
+3. \label{enum:splitCode} ZEAM は，与えられたコードを解析して，micro Elixir の言語仕様の範囲内のコードと範囲外のコードに分割する．前者はネイティブコードにコンパイルして NIF として定義する．NIF呼出しコードと後者のコードを繋ぎ合わせた Elixir コードを生成し，Erlang VM で実行するようにする
+4. \label{enum:Hastega} ZEAM の最初のアプリケーションを超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)とすることで，最初から micro Elixir / ZEAM を利用する動機を作る
+
+このうち戦略\ref{enum:splitCode}について説明する．例えば図\ref{fig:mapreduce-elixir-code}のコードのうち，1〜3行目は micro Elixir の範囲内で，4行目の `IO.inspect` は範囲外であるとする(最初期にはこのようにデザインする予定である)．この時，図\ref{fig:splitCode}のように分割し，関数 `compile_to_nif` をネイティブコードにコンパイルして NIF として定義する．なお，`def func do ... end` は引数のない関数 `func` を `...` で示されるコードを実行する関数として定義することを意味する Elixir の構文である．
+
+\begin{figure}[h]
+
+  \begin{center}
+    \begin{BVerbatim}
+def compile_to_nif do
+  1..1_000_000
+  |> Enum.map(foo)
+  |> Enum.map(bar)
+end
+
+def rest_elixir_code do
+  compile_to_nif
+  |> IO.inspect
+end
+    \end{BVerbatim}
+  \end{center}
+  \caption{コード分割例}\label{fig:splitCode}
+\end{figure}
 
 すなわち，micro Elixir / ZEAM は Erlang VM 互換を目指すのではなく，Elixir に特化してより高度に最適化したプログラミング言語処理系を目指す戦略を採っている．Erlang VM 互換を捨てる代わりに，最初のうちは Erlang VM から呼出して利用しやすい仕組みとして研究開発を進めることで，Erlang VM 互換戦略よりも早期に実務で利用できるようにした．
 
+## Erlang VM を超えていくロードマップ
+\label{sec:beyondErlangVM}
 
+次に「優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？」という問いに答える．
+
+\ref{sec:smoothStrategy}節で述べた戦略\ref{enum:Hastega}で示した Hastega (第\ref{sec:Hastega}章) は，現行の Erlang VM には備わっていない機能である．しかも，Erlang VM に機能追加する形で実現することので，実現した暁には，Elixir / Phoenix から Hastega の機能を自由に利用できるようになる予定である．この時点で，Erlang VM より優れた処理系を作っていることになると考えている．
+
+さらに第\ref{sec:introduction}章でも提示したように次のような野心的な研究目標を掲げている:
+
+* 命令並列性に基づく静的命令スケジューリング (第\ref{sec:instructionScheduling}章)
+* I/Oバウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender (第\ref{sec:Sabotender}章)
+* 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性 (第\ref{sec:executionTimeEstimation}章)
+* プロセス間通信を含む超インライン展開(第\ref{sec:superInlining}章)
+* 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化(第\ref{sec:globalOptimization}章)
+
+これらの研究目標の中には，NIF のような形で外付けしたり，現行の Erlang VM を修正して機能を取り入れることが難しいものも存在する．例えば，Sabotender (第\ref{sec:Sabotender}章)の実装には，プロセスとI/Oアクセスの実装に相当手を入れる必要がある見込みであり，Erlang VM に機能追加するのは極めて困難であると考えられる．
+
+そこで，micro Elixir / ZEAM の最終形の1つとして，Erlang VM などの他の処理系に依存することのない，独立した処理系を提供することを考えている．実装が進み，micro Elixir の言語仕様の範囲を十分に広げて Elixir の処理系として実用上使える状態にまでなれば可能になるだろう．その主な目的の1つは，Erlang VM では実現できないような研究目標を達成することである．
+
+## 他の Erlang VM 互換のプログラミング言語処理系との関係性
+
+次に「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」という問いに答える．
+
+\ref{sec:beyondErlangVM}節に述べたように，当面は既存の Erlang VM に機能付加する形で micro Elixir / ZEAM の研究開発を進める．この戦略は他の Erlang VM 互換のプログラミング言語処理系についても同様に考えることができる．すなわち，これらの研究開発者と協力関係が築けるのであれば，それらの処理系についても，技術的に可能な限り，Hastega などの micro Elixir / ZEAM の機能を利用できるようにしたいと考えている．
 
 
 # Elixir マクロを用いたメタプログラミング解析器
