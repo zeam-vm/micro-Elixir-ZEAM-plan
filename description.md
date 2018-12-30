@@ -164,8 +164,40 @@ end
 # Elixir マクロを用いたメタプログラミング解析器
 \label{sec:analyzer}
 
+Elixir には Elixir マクロという強力なメタプログラミング機構が備わっている．Elixir マクロを用いることで，Elixir の言語仕様を容易に拡張できるだけでなく，既存の言語仕様のパースを記述することなく Elixir プログラム中で Elixir プログラムの 抽象構文木 (Abstract Syntax Tree: AST) を参照・操作できる．
+
+例えば図\ref{fig:mapreduce-elixir-code}は，Elixir マクロにより下記のような AST に変換される:
+
+```
+{:|>, [context: Elixir, import: Kernel],
+ [
+   {:|>, [context: Elixir, import: Kernel],
+    [
+      {:|>, [context: Elixir, import: Kernel],
+       [
+         {:.., [context: Elixir, import: Kernel], [1, 1000000]},
+         {{:., [], [{:__aliases__, [alias: false], [:Enum]}, :map]}, [],
+          [{:foo, [], Elixir}]}
+       ]}, 
+      {{:., [], [{:__aliases__, [alias: false], [:Enum]}, :map]}, [],
+       [{:bar, [], Elixir}]}
+    ]},
+   {{:., [], [{:__aliases__, [alias: false], [:IO]}, :inspect]}, [], []}
+ ]}
+```
+
+この AST の詳説は割愛するが，この AST は Elixir の基本データ構造であるアトム `:atom` とタプル `{a, b, c, ...}` ，リスト `[a, b, c, ...]` を組合わせて表現されているので，通常の Elixir のプログラムにより変換や解析を行うことができる．
+
+micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，通常のプログラミング言語処理系の実装で必要になるパースを記述する必要性が無くなり，AST を解析して中間コードを生成する本質的なプログラミングに集中できるようにした．
+
 # LLVM を用いたコード生成系
 \label{sec:generator}
+
+近年のコンパイラではコード生成系として LLVM \cite{LLVM} が採用されていることが多い．LLVM の利点は，実に多様なアーキテクチャのコードを生成できることと，豊富な最適化器のツールチェーンを活用できることである．
+
+したがって，我々も micro Elixir / ZEAM のコード生成系として LLVM を採用したい．しかし，2019年1月現在，Elixir から LLVM を利用するためのバインディングと呼ばれる API はまだ提供されていない．
+
+そこで，我々は Elixir から Rust \cite{Rust} を呼出し，Rust の LLVM バインディングを利用することで，Elixir から LLVM を用いてコード生成できるようにする．Elixir と Rust のインタフェースは Rustler \cite{Rustler} を用いる．
 
 # 命令並列性に基づく静的命令スケジューリング
 \label{sec:instructionScheduling}
