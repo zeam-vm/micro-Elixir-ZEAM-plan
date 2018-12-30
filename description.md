@@ -20,7 +20,7 @@ micro Elixir / ZEAM は次のような構成である:
 * Elixir マクロを用いたメタプログラミング解析器 (第\ref{sec:analyzer}章)
 * LLVM を用いたコード生成系 (第\ref{sec:generator}章)
 
-我々が micro Elixir / ZEAM で掲げる野心的な研究目標は次の通りである:
+第\ref{sec:parallelismCategories}章に我々が考える Elixir の並列性の3分類を提案する．その上で，我々が micro Elixir / ZEAM で掲げる野心的な研究目標は次の通りである:
 
 * 命令並列性に基づく静的命令スケジューリング (第\ref{sec:instructionScheduling}章)
 * CPU / GPU を統合する超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)
@@ -166,7 +166,7 @@ end
 
 Elixir には Elixir マクロという強力なメタプログラミング機構が備わっている．Elixir マクロを用いることで，Elixir の言語仕様を容易に拡張できるだけでなく，既存の言語仕様のパースを記述することなく Elixir プログラム中で Elixir プログラムの 抽象構文木 (Abstract Syntax Tree: AST) を参照・操作できる．
 
-例えば図\ref{fig:mapreduce-elixir-code}は，Elixir マクロにより下記のような AST に変換される:
+例えば図\ref{fig:mapreduce-elixir-code}のコードは，Elixir マクロにより下記のような AST に変換される:
 
 ```
 {:|>, [context: Elixir, import: Kernel],
@@ -198,6 +198,21 @@ micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，�
 したがって，我々も micro Elixir / ZEAM のコード生成系として LLVM を採用したい．しかし，2019年1月現在，Elixir から LLVM を利用するためのバインディングと呼ばれる API はまだ提供されていない．
 
 そこで，我々は Elixir から Rust \cite{Rust} を呼出し，Rust の LLVM バインディングを利用することで，Elixir から LLVM を用いてコード生成できるようにする．Elixir と Rust のインタフェースは Rustler \cite{Rustler} を用いる．
+
+# Elixir コードの並列性の3分類
+\label{sec:parallelismCategories}
+
+Elixir コードから読取れる並列性には，大きく分けて次の3種類があると我々は考えている:
+
+* 命令並列性: Elixir コードをデータフローで表したときに現れる並列性
+* Hastega 型並列性: 例えば図\ref{fig:mapreduce-elixir-code}のコードで示されるような MapReduce プログラミングスタイルによって示唆される並列性
+* Sabotender 型並列性: アクターモデル\cite{Hewitt:1973:UMA:1624775.1624804}にしたがった並行プロセスモデルで現れる並列性
+
+それぞれの並列性を考慮して，次のように並列化・高速化を行う:
+
+* 命令並列性: 第\ref{sec:instructionScheduling}章
+* Hastega 型並列性: 第\ref{sec:Hastega}章
+* Sabotender 型並列性: 第\ref{sec:Sabotender}章
 
 # 命令並列性に基づく静的命令スケジューリング
 \label{sec:instructionScheduling}
