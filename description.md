@@ -1,10 +1,11 @@
 # はじめに
+\label{sec:introduction}
 
 Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．本論文では，第\ref{sec:Elixir}章にて Elixir の特長を詳述する．
 
 Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}．本論文では，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換実行系について概説する．
 
-我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM では，そのような Erlang VM 互換のアプローチとは異なるアプローチで Elixir の処理系を開発する．
+我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換のアプローチとは異なるアプローチで Elixir の処理系を開発する．
 
 おそらく新たな処理系をわざわざ研究開発することについて，次のような疑問を持つことだろう:
 
@@ -78,8 +79,37 @@ IO.inspect(Enum.map(Enum.map(1..1_000_000, foo), bar))
 
 Elixir は，このような Erlang VM の特長を継承している．
 
+(他の Erlang VM 互換の概説)
+
 # micro Elixir / ZEAM の実装戦略
 \label{sec:implementationStrategy}
+
+第\ref{sec:introduction}章での問いを再掲する:
+
+* 現在主流の Erlang VM から円滑に移行することはできるのか？
+* 優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？
+* すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？
+
+以下に各問いについて答えていく．
+
+## Erlang VM からの円滑な移行戦略
+
+我々は Erlang VM 互換の処理系を一から研究開発するアプローチの問題点を次のように考えた:
+
+* 現行の優れた言語処理系である Erlang VM と両立しない
+* そのことにより，少なくとも Erlang VM 同等以上のパフォーマンスを安定して得られるようにならないと実運用に用いる利点がない
+* そのような状態になるまでに，多大な時間を必要とする
+
+そこで，我々が採用した戦略は次の通りである:
+
+1. Elixir のサブセットのプログラミング言語である micro Elixir を新たに定義する
+2. ZEAM は Elixir プロジェクト中のコードの一部を，NIF (Native Implemented Function: ネイティブコードで実装された関数) にコンパイルして Erlang VM から呼び出せるようにする処理系として，当面の間研究開発を進める
+3. ZEAM は，与えられたコードを解析して，micro Elixir の言語仕様の範囲内のコードと範囲外のコードに分割する．前者はネイティブコードにコンパイルして NIF として定義する．NIF呼出しコードと後者のコードを繋ぎ合わせた Elixir コードを生成し，Erlang VM で実行するようにする
+4. ZEAM の最初のアプリケーションを超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)とすることで，最初から micro Elixir / ZEAM を利用する動機を作る
+
+すなわち，micro Elixir / ZEAM は Erlang VM 互換を目指すのではなく，Elixir に特化してより高度に最適化したプログラミング言語処理系を目指す戦略を採っている．Erlang VM 互換を捨てる代わりに，最初のうちは Erlang VM から呼出して利用しやすい仕組みとして研究開発を進めることで，Erlang VM 互換戦略よりも早期に実務で利用できるようにした．
+
+
 
 
 # Elixir マクロを用いたメタプログラミング解析器
