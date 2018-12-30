@@ -108,7 +108,9 @@ Elixir は，このような Erlang VM の特長を継承している．
 1. Elixir のサブセットのプログラミング言語である micro Elixir を新たに定義する
 2. ZEAM は Elixir プロジェクト中のコードの一部を，NIF (Native Implemented Function: ネイティブコードで実装された関数) にコンパイルして Erlang VM から呼び出せるようにする処理系として，当面の間研究開発を進める
 3. \label{enum:splitCode} ZEAM は，与えられたコードを解析して，micro Elixir の言語仕様の範囲内のコードと範囲外のコードに分割する．前者はネイティブコードにコンパイルして NIF として定義する．NIF呼出しコードと後者のコードを繋ぎ合わせた Elixir コードを生成し，Erlang VM で実行するようにする
-4. \label{enum:Hastega} ZEAM の最初のアプリケーションを超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)とすることで，最初から micro Elixir / ZEAM を利用する動機を作る
+4. ZEAM の解析部は， Elixir マクロを利用することで，パーサーをフルスクラッチで開発しないで済ませる (第\ref{sec:analyzer}章)
+5. ZEAM の生成部は， Rust \cite{Rust} 経由で LLVM \cite{LLVM} を利用することで，対応可能な ISA を最大化し，かつ最適化器などのツールチェーンを活用できるようにする   
+6. \label{enum:Hastega} ZEAM の最初のアプリケーションを超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)とすることで，最初から micro Elixir / ZEAM を利用する動機を作る
 
 このうち戦略\ref{enum:splitCode}について説明する．例えば図\ref{fig:mapreduce-elixir-code}のコードのうち，1〜3行目は micro Elixir の範囲内で，4行目の `IO.inspect` は範囲外であるとする(最初期にはこのようにデザインする予定である)．この時，図\ref{fig:splitCode}のように分割し，関数 `compile_to_nif` をネイティブコードにコンパイルして NIF として定義する．なお，`def func do ... end` は引数のない関数 `func` を `...` で示されるコードを実行する関数として定義することを意味する Elixir の構文である．
 
