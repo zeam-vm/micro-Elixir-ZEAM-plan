@@ -344,7 +344,7 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 
 本論文では次のことを述べた:
 
-* 第\ref{sec:Elixir}章では，Elixir における MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.132749}について述べた．
+* 第\ref{sec:Elixir}章では，Elixir における MapReduce プログラミングスタイルについて述べた．
 * 第\ref{sec:ErlangVM}章では，Elixir を支える処理系である Erlang VM とその特長である並行プログラミングに優れている点と耐障害性が高い点について説明した．
 * 第\ref{sec:implementationStrategy}章では，micro Elixir / ZEAM の実装戦略について，「現在主流の Erlang VM から円滑に移行することができるのか？」「優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？」「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」の3つの問いに答える形で説明した．
 * 第\ref{sec:analyzer}章と第\ref{sec:generator}章で，micro Elixir / ZEAM の基本構成と実装方針について解説した．
