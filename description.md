@@ -1,40 +1,26 @@
 # はじめに
 \label{sec:introduction}
 
-Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．本論文では，第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}について説明する．
+Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．
 
-Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}\cite{Enigma}．本論文では，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換処理系について概説する．
+Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}\cite{Enigma}．
 
-我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換のアプローチとは異なるアプローチで Elixir の処理系を開発する．
+我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換の実現とは異なるアプローチで Elixir の処理系を開発する．
 
-おそらく新たな処理系をわざわざ研究開発することについて，次のような疑問を持つことだろう:
+我々が micro Elixir / ZEAM で掲げる野心的な研究目標は次の通りである:
 
-* 現在主流の Erlang VM から円滑に移行することはできるのか？
-* 優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？
-* すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？
-
-第\ref{sec:implementationStrategy}章でこれらの問いに対する答えを説明する．
-
-micro Elixir / ZEAM は次のような構成である:
-
-* Elixir マクロを用いたメタプログラミング解析器 (第\ref{sec:analyzer}章)
-* LLVM を用いたコード生成系 (第\ref{sec:generator}章)
-
-第\ref{sec:parallelismCategories}章に我々が考える Elixir の並列性の3分類を提案する．その上で，我々が micro Elixir / ZEAM で掲げる野心的な研究目標は次の通りである:
-
-* 命令並列性に基づく静的命令スケジューリング (第\ref{sec:instructionScheduling}章)
-* CPU / GPU を統合する超並列高速実行処理系 Hastega (第\ref{sec:Hastega}章)
-* I/Oバウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender (第\ref{sec:Sabotender}章)
-* 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性 (第\ref{sec:executionTimeEstimation}章)
-* プロセス間通信を含む超インライン展開(第\ref{sec:superInlining}章)
-* 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化(第\ref{sec:globalOptimization}章)
+* 命令並列性に基づく静的命令スケジューリング
+* CPU / GPU を統合する超並列高速実行処理系 Hastega
+* I/Oバウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender
+* 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性
+* プロセス間通信を含む超インライン展開
+* 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化
 
 本論文の目的は micro Elixir / ZEAM の研究構想を提示し，各研究目標に対する技術的課題を明らかにすることである．
 
-これらの研究目標の実現を前提に，今までの常識を打ち破るようなカーネルやVM，プロセッサアーキテクチャ，並列/分散コンピューティング，特定ドメイン向け最適化などの研究に取り組む．本論文のまとめを第\ref{sec:summary}章に，将来課題を第\ref{sec:futureWorks}章にそれぞれ述べる．
+本論文の以下の構成は次の通りである: 第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}について説明した後，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換処理系について概説する．第\ref{sec:implementationStrategy}章で，新たな処理系をわざわざ研究開発することについての問いに対する答えを説明する．第\ref{sec:architecture}章で，micro Elixir / ZEAM の基本構成について説明する．第\ref{sec:parallelismCategories}章に我々が考える Elixir の並列性の3分類を提案し，それぞれの並列性について研究目標を掲げる．第\ref{sec:RealizationOfGlobalOptimization}章で，いくつかの要素技術を提案した上で，それらを統合して大域的な最適化を行うことについて述べる．最後に，本論文のまとめと将来課題を第\ref{sec:summary}章で述べる．
 
-
-# Elixir
+# Elixir における MapReduce プログラミングスタイル
 \label{sec:Elixir}
 
 Elixir は MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}を採用している．このような Elixir のプログラム例を図\ref{fig:mapreduce-elixir-code}に示す．
@@ -73,9 +59,19 @@ IO.inspect(Enum.map(Enum.map(1..1_000_000, foo()), bar()))
 
 現在，Elixir は Erlang VM という仮想機械(VM)上で動作する．Erlang VM の特長は，並行プログラミングに優れていることと，耐障害性が高いことである．
 
-並行プログラミングに優れる理由は，アクターモデル\cite{Hewitt:1973:UMA:1624775.1624804}に基づく並行プログラミングモデルを採用していること，プロセスの生成がコアごとに独立していて軽量であること，資源を直接操作するプロセスを1つに限定して資源の利用をそのプロセスへのメッセージパッシングで実現していること，これらにより同期・排他制御を行う必要性を大幅に削減していることが挙げられる．
+並行プログラミングに優れる理由は次の通りである: 
 
-また，耐障害性に優れている理由は，プロセスごとに分離したメモリ空間であること，そのことにより Full GC が働いていわゆる Stop the world すなわち処理系を利用するすべてのプログラムの動作が一斉停止する事態に陥ることがないこと，基本的にプログラム中に例外処理を記述せずにプロセスごと異常終了するように設計しておき監視プロセスにより該当プロセスを再起動させることで復旧させるアプローチを採用していること，これらのことにより障害が発生してもメモリのリークや不整合が生じることがないことなどが挙げられる．
+* アクターモデル\cite{Hewitt:1973:UMA:1624775.1624804}に基づく並行プログラミングモデルを採用していること
+* プロセスの生成がコアごとに独立していて軽量であること
+* 資源を直接操作するプロセスを1つに限定して資源の利用をそのプロセスへのメッセージパッシングで実現していること
+* これらにより同期・排他制御を行う必要性を大幅に削減していること
+
+また，耐障害性に優れている理由は，次の通りである: 
+
+* プロセスごとに分離したメモリ空間であること
+* そのことにより Full GC が働いていわゆる Stop the world すなわち処理系を利用するすべてのプログラムの動作が一斉停止する事態に陥ることがないこと
+* 基本的にプログラム中に例外処理を記述せずにプロセスごと異常終了するように設計しておき監視プロセスにより該当プロセスを再起動させることで復旧させるアプローチを採用していること
+* これらのことにより障害が発生してもメモリのリークや不整合が生じることがないこと
 
 Elixir は，このような Erlang VM の特長を継承している．
 
@@ -92,13 +88,11 @@ Elixir は，このような Erlang VM の特長を継承している．
 # micro Elixir / ZEAM の実装戦略
 \label{sec:implementationStrategy}
 
-第\ref{sec:introduction}章での問いを再掲する:
+おそらく新たな処理系をわざわざ研究開発することについて，次のような疑問を持つと考えられるので，各節でそれぞれの問いに答えた:
 
-* 現在主流の Erlang VM から円滑に移行することはできるのか？
-* 優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？
-* すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？
-
-以下に各問いについて答えていく．
+* 現在主流の Erlang VM から円滑に移行することはできるのか？ (\ref{sec:smoothStrategy}節)
+* 優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？ (\ref{sec:beyondErlangVM}節)
+* すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？ (\ref{sec:relationToOtherErlangVMCompatibleProcessors}節)
 
 ## Erlang VM からの円滑な移行戦略
 \label{sec:smoothStrategy}
@@ -152,24 +146,32 @@ end
 
 さらに第\ref{sec:introduction}章でも提示したように次のような野心的な研究目標を掲げている:
 
-* 命令並列性に基づく静的命令スケジューリング (第\ref{sec:instructionScheduling}章)
-* I/Oバウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender (第\ref{sec:Sabotender}章)
-* 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性 (第\ref{sec:executionTimeEstimation}章)
-* プロセス間通信を含む超インライン展開(第\ref{sec:superInlining}章)
-* 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化(第\ref{sec:globalOptimization}章)
-
-これらの研究目標の中には，NIF のような形で外付けしたり，現行の Erlang VM を修正して機能を取り入れることが難しいものも存在する．例えば，Sabotender (第\ref{sec:Sabotender}章)の実装には，プロセスとI/Oアクセスの実装に相当手を入れる必要がある見込みであり，Erlang VM に機能追加するのは極めて困難であると考えられる．
-
-そこで，micro Elixir / ZEAM の最終形の1つとして，Erlang VM などの他の処理系に依存することのない，独立した処理系を提供することを考えている．実装が進み，micro Elixir の言語仕様の範囲を十分に広げて Elixir の処理系として実用上使える状態にまでなれば可能になるだろう．その主な目的の1つは，Erlang VM では実現できないような研究目標を達成することである．
+* 命令並列性に基づく静的命令スケジューリング (\ref{sec:instructionScheduling}節)
+* I/Oバウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender (\ref{sec:Sabotender}節)
+* 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性 (\ref{sec:executionTimeEstimation}節)
+* プロセス間通信を含む超インライン展開(\ref{sec:superInlining}節)
+* 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化(\ref{sec:globalOptimization}節)
 
 ## 他の Erlang VM 互換のプログラミング言語処理系との関係性
+\label{sec:relationToOtherErlangVMCompatibleProcessors}
 
 次に「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」という問いに答える．
 
-\ref{sec:beyondErlangVM}節に述べたように，当面は既存の Erlang VM に機能付加する形で micro Elixir / ZEAM の研究開発を進める．この戦略は他の Erlang VM 互換のプログラミング言語処理系についても同様に考えることができる．すなわち，これらの研究開発者と協力関係が築けるのであれば，それらの処理系についても，技術的に可能な限り，Hastega などの micro Elixir / ZEAM の機能を利用できるようにしたいと考えている．
+\ref{sec:beyondErlangVM}節に述べたように，当面は既存の Erlang VM に機能付加する形で micro Elixir / ZEAM の研究開発を進める．この戦略は他の Erlang VM 互換のプログラミング言語処理系についても同様に考えることができる．すなわち，それらの処理系についても，Hastega (\ref{sec:Hastega}節) のような micro Elixir / ZEAM の機能を提供しうる．
+
+一方で，Sabotender (\ref{sec:Sabotender}節)
+のように，NIF のような形で外付けしたり，現行の Erlang VM を修正して機能を取り入れることが難しいものも存在する．そこで，micro Elixir / ZEAM の最終形の1つとして，Erlang VM などの他の処理系に依存することのない，独立した処理系を提供することを考えている．実装が進み，micro Elixir の言語仕様の範囲を十分に広げて Elixir の処理系として実用上使える状態にまでなれば可能になるだろう．その主な目的の1つは，Erlang VM では実現できないような研究目標を達成することである．
 
 
-# Elixir マクロを用いたメタプログラミング解析器
+# micro Elixir / ZEAM の基本構成
+\label{sec:architecture}
+
+micro Elixir / ZEAM は次のような構成である:
+
+* Elixir マクロを用いたメタプログラミング解析器 (\ref{sec:analyzer}節)
+* LLVM を用いたコード生成系 (\ref{sec:generator}節)
+
+## Elixir マクロを用いたメタプログラミング解析器
 \label{sec:analyzer}
 
 Elixir には Elixir マクロという強力なメタプログラミング機構が備わっている．Elixir マクロを用いることで，Elixir の言語仕様を容易に拡張できるだけでなく，既存の言語仕様のパースを記述することなく Elixir プログラム中で Elixir プログラムの 抽象構文木 (Abstract Syntax Tree: AST) を参照・操作できる．
@@ -204,7 +206,7 @@ Elixir には Elixir マクロという強力なメタプログラミング機�
 
 micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，通常のプログラミング言語処理系の実装で必要になるパースを記述する必要性が無くなり，AST を解析して中間コードを生成する本質的なプログラミングに集中できるようにした．
 
-# LLVM を用いたコード生成系
+## LLVM を用いたコード生成系
 \label{sec:generator}
 
 近年のコンパイラではコード生成系として LLVM \cite{LLVM} が採用されていることが多い．LLVM の利点は，実に多様なアーキテクチャのコードを生成できることと，豊富な最適化器のツールチェーンを活用できることである．
@@ -220,7 +222,7 @@ micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，�
 
 双方の得失を総合判断した結果，現時点では，Elixir で記述した方が利点が大きいと考えている．
 
-# Elixir コードの並列性の3分類
+# Elixir コードの並列性の3分類とその実現
 \label{sec:parallelismCategories}
 
 Elixir コードから読取れる並列性には，大きく分けて次の3種類があると我々は考えている:
@@ -231,11 +233,11 @@ Elixir コードから読取れる並列性には，大きく分けて次の3種
 
 それぞれの並列性を考慮して，次のように並列化・高速化を行う:
 
-* 命令並列性: 第\ref{sec:instructionScheduling}章
-* Hastega 型並列性: 第\ref{sec:Hastega}章
-* Sabotender 型並列性: 第\ref{sec:Sabotender}章
+* 命令並列性: \ref{sec:instructionScheduling}節
+* Hastega 型並列性: \ref{sec:Hastega}節
+* Sabotender 型並列性: \ref{sec:Sabotender}節
 
-# 命令並列性に基づく静的命令スケジューリング
+## 命令並列性に基づく静的命令スケジューリング
 \label{sec:instructionScheduling}
 
 典型的には図\ref{fig:mapreduce-elixir-code}に示されるように，Elixir は与えられたデータに対し，パイプライン演算子でデータフローを形成して次々とデータ変換を行うことで，計算が進行する，いわばデータ変換パラダイムあるいはデータフローパラダイムとでも言うべきプログラミングパラダイムであると解釈することもできる．
@@ -252,7 +254,7 @@ MapReduce スタイルで書かれた Elixir コードでは，データフロ�
 
 
 
-# CPU / GPU を統合する超並列高速実行処理系 Hastega
+## CPU / GPU を統合する超並列高速実行処理系 Hastega
 \label{sec:Hastega}
 
 図\ref{fig:mapreduce-elixir-code}のプログラムコードは容易に並列実行が可能である．1から1,000,000の各要素に対する関数 `foo` と関数 `bar` の適用は他に影響されることなく完全に独立して実行することが可能である，すなわちこのプログラムは 1,000,000 の並列性を持つことが容易に推測できる．
@@ -271,7 +273,7 @@ Hastega が目標としているのは，次のことである:
 
 我々は micro Elixir / ZEAM が実現する最初の機能として，Hastega を選んだ．その理由は，実現した場合の訴求力が高いこと，Erlang VM から NIF を呼出す形で実現しやすいことが挙げられる．
 
-# I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender
+## I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender
 \label{sec:Sabotender}
 
 I/Oバウンドであるような処理を高速化するためには，高速にコンテキストスイッチでき，省メモリ性の高い並行プログラミング機構と，非同期I/Oの採用が有効である．Node.js\cite{NodeSite}は Node プログラミングモデル \cite{Node} に基づくコールバックを用いた新しい並行プログラミング機構と非同期I/Oを全面的に採用することで，I/Oバウンド処理を高速化することに成功した．
@@ -314,7 +316,17 @@ Sabotender で実現しようとしているのは，イベントキューが「
 
 \ref{enum:SabotenderSafety}について，このような高度な処理系を信頼できるものにするためには，処理系自体に不具合が織り込まれない仕組みに設計することが肝要である．想定される不具合としては，データ型の不一致による問題のほかに，並列プログラミングに起因するデッドロックや不公平性といった不具合が考えられる．データ型の不一致などの問題については，型理論によって型安全性を追求するアプローチや，Alloy \cite{Alloy} のような反例を例示することによるアプローチが有効である．また，並列プログラミングに起因する問題については，SPIN \cite{SPIN} などのモデル検査のようなアプローチが有効である．Sabotender の研究開発にあたり，このような理論的アプローチを積極的に導入して進める．
 
-# 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性
+# 大域的最適化の実現
+\label{sec:RealizationOfGlobalOptimization}
+
+本章では，まず次の要素技術を提案する．
+
+* 実行時間予測，静的タスクスケジューリング，ハードリアルタイム性の実現 (\ref{sec:executionTimeEstimation}節)
+* 超インライン展開 (\ref{sec:superInlining}節)
+
+さらに，それらを統合して大域的な最適化を行うことについて述べる(\ref{sec:globalOptimization}節)．
+
+## 実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性の実現
 \label{sec:executionTimeEstimation}
 
 停止性問題，すなわち「任意のプログラムが有限時間内で終了(停止)するかどうかを，アルゴリズムによって証明することはできない」という定理が存在することにより，任意のプログラムについて，そのプログラムを実行するのにどのくらいの時間がかかるのかを推定することは不可能であるとされてきた．
@@ -337,7 +349,7 @@ Sabotender で実現しようとしているのは，イベントキューが「
 
 静的タスクスケジューリングを用いた他の最適化のアイデアについては，第\ref{sec:globalOptimization}章で述べる．
 
-# プロセス間通信を含む超インライン展開
+## プロセス間通信を含む超インライン展開
 \label{sec:superInlining}
 
 Elixir は，オブジェクト指向プログラミング言語と異なり，関数の呼出先は静的に決定されていることがほとんどで，動的になるのは，変数として保持している関数をドット演算子で呼出す時と，プロトコルを用いる時のみである．
@@ -352,7 +364,7 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 
 超インライン展開を行った後の最適化については，第\ref{sec:globalOptimization}章で述べる．
 
-# 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリと I/O の最適化
+## 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリと I/O 制御の最適化
 \label{sec:globalOptimization}
 
 第\ref{sec:executionTimeEstimation}章で述べた静的タスクスケジューリングと，第\ref{sec:superInlining}章で述べた超インライン展開を活用した最適化として，大域的なキャッシュメモリと I/O 制御の最適化を提案する．
@@ -369,20 +381,17 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 
 さらに，I/O制御をデータベースのように，アトミックな処理を単位として記述し，場合によってはロールバックを可能にするというアイデアも考えている．これにより，デッドラインの関係上，どうしてもタスクの優先度逆転が生じてしまう場合に，優先度の低いタスクのI/O制御をアボートしたりロールバックしたりすることで，速やかに優先度の高いタスクへ制御権を渡すことが可能になる．これにより，よりデッドライン制約が厳しい場合でもデッドライン制約を満たすことが可能になると考えている．
 
-# まとめ
+# まとめと将来課題
 \label{sec:summary}
 
 本論文では次のことを述べた:
 
 * 第\ref{sec:Elixir}章では，Elixir における MapReduce プログラミングスタイルについて述べた．
-* 第\ref{sec:ErlangVM}章では，Elixir を支える処理系である Erlang VM とその特長である並行プログラミングに優れている点と耐障害性が高い点について説明した．
+* 第\ref{sec:ErlangVM}章では，Elixir を支える処理系である Erlang VM とその優れた点である並行プログラミングと耐障害性について説明した．
 * 第\ref{sec:implementationStrategy}章では，micro Elixir / ZEAM の実装戦略について，「現在主流の Erlang VM から円滑に移行することができるのか？」「優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？」「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」の3つの問いに答える形で説明した．
-* 第\ref{sec:analyzer}章と第\ref{sec:generator}章で，micro Elixir / ZEAM の基本構成と実装方針について解説した．
-* 第\ref{sec:parallelismCategories}章では Elixir コードから読取れる3種類の並列性について紹介し，この3分類に沿って，第\ref{sec:instructionScheduling}章で命令並列性に基づく静的命令スケジューリングについて，第\ref{sec:Hastega}章で CPU / GPU を統合して CPU バウンド処理を高速化する超並列高速実行処理系 Hastega について，第\ref{sec:Sabotender}章で I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender についてそれぞれ紹介した．
-* 第\ref{sec:executionTimeEstimation}章で実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性について議論し，第\ref{sec:superInlining}章でプロセス間通信を含む超インライン展開について提案した．第\ref{sec:globalOptimization}章ではそれらを前提とした大域的なキャッシュメモリとI/Oの最適化の可能性について議論した．
-
-# 将来課題
-\label{sec:futureWorks}
+* 第\ref{sec:architecture}章で，micro Elixir / ZEAM の基本構成と実装方針について解説した．
+* 第\ref{sec:parallelismCategories}章では Elixir コードから読取れる3種類の並列性について紹介し，この3分類に沿って，\ref{sec:instructionScheduling}節で命令並列性に基づく静的命令スケジューリングについて，\ref{sec:Hastega}節で CPU / GPU を統合して CPU バウンド処理を高速化する超並列高速実行処理系 Hastega について，\ref{sec:Sabotender}節で I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender についてそれぞれ紹介した．
+* 第\ref{sec:RealizationOfGlobalOptimization}章で，実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性の実現(\ref{sec:executionTimeEstimation}節)と，プロセス間通信を含む超インライン展開(\ref{sec:superInlining}節)について提案した後，それらを前提とした大域的なキャッシュメモリとI/Oの最適化の可能性について議論した(\ref{sec:globalOptimization}節)．
 
 将来課題は実にたくさんある．
 
