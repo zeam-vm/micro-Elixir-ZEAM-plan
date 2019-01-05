@@ -174,9 +174,12 @@ end
 
 Elixir には Elixir マクロという強力なメタプログラミング機構が備わっている．Elixir マクロを用いることで，Elixir の言語仕様を容易に拡張できるだけでなく，既存の言語仕様のパースを記述することなく Elixir プログラム中で Elixir プログラムの 抽象構文木 (Abstract Syntax Tree: AST) を参照・操作できる．
 
-例えば図\ref{fig:mapreduce-elixir-code}のコードは，Elixir マクロにより下記のような AST に変換される:
+例えば図\ref{fig:mapreduce-elixir-code}のコードは，Elixir マクロにより図\ref{fig:internalRepresentation}のような AST に変換される:
 
-```
+\begin{figure}[h]
+
+  \begin{center}
+    \begin{BVerbatim}
 {:|>, [context: Elixir, import: Kernel],
  [
    {:|>, [context: Elixir, import: Kernel],
@@ -192,9 +195,12 @@ Elixir には Elixir マクロという強力なメタプログラミング機�
     ]},
    {{:., [], [{:__aliases__, [alias: false], [:IO]}, :inspect]}, [], []}
  ]}
-```
+    \end{BVerbatim}
+  \end{center}
+  \caption{コード分割例}\label{fig:internalRepresentation}
+\end{figure}
 
-この AST の詳説は割愛するが，この AST は Elixir の基本データ構造であるアトム `:atom` とタプル `{a, b, c, ...}` ，リスト `[a, b, c, ...]` を組合わせて表現されているので，通常の Elixir のプログラムにより変換や解析を行うことができる．
+図\ref{fig:internalRepresentation}の AST の詳説は割愛するが，この AST は Elixir の基本データ構造であるアトム `:atom` とタプル `{a, b, c, ...}` ，リスト `[a, b, c, ...]` を組合わせて表現されているので，通常の Elixir のプログラムにより変換や解析を行うことができる．
 
 micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，通常のプログラミング言語処理系の実装で必要になるパースを記述する必要性が無くなり，AST を解析して中間コードを生成する本質的なプログラミングに集中できるようにした．
 
@@ -206,6 +212,13 @@ micro Elixir / ZEAM では Elixir マクロを解析部に用いることで，�
 したがって，我々も micro Elixir / ZEAM のコード生成系として LLVM を採用したい．しかし，2019年1月現在，Elixir から LLVM を利用するためのバインディングと呼ばれる API はまだ提供されていない．
 
 そこで，我々は Elixir から Rust \cite{Rust} を呼出し，Rust の LLVM バインディングを利用することで，Elixir から LLVM を用いてコード生成できるようにする．Elixir と Rust のインタフェースは Rustler \cite{Rustler} を用いる．
+
+コード生成系を Elixir で記述するか，Rust で記述するかについては，次のような得失がある:
+
+* Elixir で実装した場合には，図\ref{fig:internalRepresentation}のような Elixir コードの内部表現をネイティブに扱えることから，実装が容易である可能性が高い．しかし，第\ref{sec:Hastega}章で後述するようなクライアントサイドでの Hastega の実行をする際に，クライアントサイドでコード生成できるようにするために，自己反映的(self-reflective)な処理系である必要性が出てくる．自己反映的な処理系を実装するためには，注意深く設計する必要があることから，設計の難易度が増す可能性がある．
+* Rust で実装した場合の利点は，既存の LLVM バインディングをそのまま利用できるので，クライアントサイドでのコード生成が容易になる．しかし，図\ref{fig:internalRepresentation} のような Elixir コードの内部表現をパースするプログラムを Rustler \cite{Rustler} を使って実装する必要があるため，実装が複雑になると考えられる．
+
+双方の得失を総合判断した結果，現時点では，Elixir で記述した方が利点が大きいと考えている．
 
 # Elixir コードの並列性の3分類
 \label{sec:parallelismCategories}
@@ -370,4 +383,12 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 
 # 将来課題
 \label{sec:futureWorks}
+
+将来課題は実にたくさんある．
+
+まず着手するのは Hastega の実装である．`Enum.map` に対し，CPU の SIMD 命令の発行によるソフトウェア・パイプラインによる最適化を実装することから始める．そのためには，Elixir マクロを使って LLVM のコードを生成する実装を確立する必要がある．
+
+次に，多くの提案機能を支えているのは実行時間予測である点が明らかになったことから，実行時間予測の実現に向けて，有限長のデータの走査を含むプログラム片を帰納的に構成したプログラムが必ず有限時間内で終了することを証明し，リアルタイム性の実現や，静的解析・形式検証技術などの綿密なサーベイを行った上で，実行時間予測を理論的に体系づけて設計・実装する．
+
+以上の実装と理論体系を整備した後であれば，各論の中から着手しやすい部分から順番に実装して研究開発を進めることが可能になると考えている．
 
