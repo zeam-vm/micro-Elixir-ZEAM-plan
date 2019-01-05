@@ -3,7 +3,7 @@
 
 Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．本論文では，第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}について説明する．
 
-Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}\cite{Enigma}．本論文では，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換実行系について概説する．
+Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}\cite{Enigma}．本論文では，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換処理系について概説する．
 
 我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換のアプローチとは異なるアプローチで Elixir の処理系を開発する．
 
