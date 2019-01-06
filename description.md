@@ -3,7 +3,7 @@
 
 Elixir\cite{Elixir}は，並行・並列プログラミングに長けており，耐障害性が高いという特長を備えている．さらに， Elixir で書かれたウェブサーバーフレームワークである Phoenix\cite{Phoenix}を用いることで，極めてレスポンス性の高いウェブサーバーを構築できる\cite{Elixir16}．Elixir User's Survey 2016 \cite{ElixirSurvey2016} の調査対象で Elixir を採用していると回答した企業数は，全世界で2014年に191，2015年に405，2016年に1109である．現在はさらに急速に普及が進んでいる．
 
-Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．2018年になって，Erlang VM と互換性をもつ実行系が相次いで提案・発表されている\cite{AtomVM}\cite{CoreErlang}\cite{Starlight}\cite{Enigma}．
+Elixir の高い並行・並列プログラミング能力と耐障害性を支えているのは，Elixir の実行系である Erlang VM である．Erlang VM は Erlang \cite{Erlang} のために開発された VM で，Elixir の他にもいくつかのプログラミング言語が Erlang VM 上で動作する．
 
 我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換の実現とは異なるアプローチで Elixir の処理系を開発する．
 
@@ -25,7 +25,7 @@ micro Elixir / ZEAM の基本構成は次の通りである:
 
 本論文の目的は micro Elixir / ZEAM の研究構想を提示し，各研究目標に対する技術的課題を明らかにすることである．
 
-本論文の以下の構成は次の通りである: 第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}について説明した後，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換処理系について概説する．第\ref{sec:implementationStrategy}章で，新たな処理系をわざわざ研究開発することについての問いに対する答えを説明する．第\ref{sec:architecture}章で，micro Elixir / ZEAM の基本構成について説明する．第\ref{sec:parallelismCategories}章に我々が考える Elixir の並列性の3分類を提案し，それぞれの並列性について研究目標を掲げる．第\ref{sec:RealizationOfGlobalOptimization}章で，いくつかの要素技術を提案した上で，それらを統合して大域的な最適化を行うことについて述べる．最後に，本論文のまとめと将来課題を第\ref{sec:summary}章で述べる．
+本論文の以下の構成は次の通りである: 第\ref{sec:Elixir}章にて Elixir の特長を生み出す基礎となる MapReduce プログラミングスタイル\cite{Dean:2008:MSD:1327452.1327492}について説明した後，第\ref{sec:ErlangVM}章にて Erlang VM の特長を詳述し，互換処理系について概説する．第\ref{sec:implementationStrategy}章で，新たな処理系をわざわざ研究開発することについての問いに対する答えを説明する．第\ref{sec:architecture}章で，micro Elixir / ZEAM の基本構成について説明する．第\ref{sec:parallelismCategories}章に我々が考える Elixir の並列性の3分類を提案し，それぞれの並列性について研究目標を掲げる．第\ref{sec:RealizationOfGlobalOptimization}章で，いくつかの要素技術を提案した上で，それらを統合して大域的な最適化を行うことについて述べる．さらに第\ref{sec:otherVM}章で，他の Erlang VM 互換の処理系について概観し，これらと micro Elixir / ZEAM の関係性のあり方について述べる．最後に，本論文のまとめと将来課題を第\ref{sec:summary}章で述べる．
 
 # Elixir における MapReduce プログラミングスタイル
 \label{sec:Elixir}
@@ -82,16 +82,6 @@ IO.inspect(Enum.map(Enum.map(1..1_000_000, foo()), bar()))
 
 Elixir は，このような Erlang VM の特長を継承している．
 
-他の Erlang VM 互換の処理系の概要については以下の通りである: 
-
-* AtomVM \cite{AtomVM} は組込みシステム向けに開発された Erlang VM 互換の処理系である．マイコンボードでの実行を想定している．我々の実測では，AtomVM のバイナリイメージ(elf)のサイズは約676KBに収まっている．インタプリタ実行のため，低速である．
-
-* core_erlang \cite{CoreErlang} は Rustler \cite{Rustler} の作者による Erlang VM 互換処理系である．Rust \cite{Rust} を用いて実装しており，Core Erlang と名づけられた Erlang のサブセットプログラミング言語から低レベル中間表現(LIR)へのコンパイルと，LIRによるインタプリタ実行が行える．現時点では `unsafe` を用いていないため，メモリ安全・型安全である．インタプリタ実行のため，低速である．
-
-* Starlight \cite{Starlight} も Rust \cite{Rust} による Erlang VM 互換処理系である．Rust の特性を生かして，メモリ安全・型安全と高速性を両立し，かつできる限り GC が無くなるように設計・実装を進めている\cite{Starlight}\cite{StarlightRustImplement}．
-
-* Enigma \cite{Enigma} も Rust \cite{Rust} による Erlang VM 互換処理系である．Erlang 標準のコンパイラである `erlc` が生成する BEAM バイトコードを実行する．`unsafe` を使用しているため，完全にはメモリ安全・型安全ではない．
-
 # micro Elixir / ZEAM の実装戦略
 \label{sec:implementationStrategy}
 
@@ -99,7 +89,7 @@ Elixir は，このような Erlang VM の特長を継承している．
 
 * 現在主流の Erlang VM から円滑に移行することはできるのか？ (\ref{sec:smoothStrategy}節)
 * 優れた Erlang VM よりもさらに優れた処理系を作れる勝算はあるのか？ (\ref{sec:beyondErlangVM}節)
-* すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？ (\ref{sec:relationToOtherErlangVMCompatibleProcessors}節)
+* さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？ (\ref{sec:relationToOtherErlangVMCompatibleProcessors}節)
 
 ## Erlang VM からの円滑な移行戦略
 \label{sec:smoothStrategy}
@@ -159,16 +149,14 @@ end
 * プロセス間通信を含む超インライン展開(\ref{sec:superInlining}節)
 * 超インライン展開や静的タスクスケジューリングを前提にした大域的なキャッシュメモリとI/Oの最適化(\ref{sec:globalOptimization}節)
 
-## 他の Erlang VM 互換のプログラミング言語処理系との関係性
+## Erlang VM との関係性
 \label{sec:relationToOtherErlangVMCompatibleProcessors}
 
-次に「すでにたくさんの Erlang VM 互換のプログラミング言語処理系が数多く提案されている中で，さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」という問いに答える．
+次に「さらに micro Elixir / ZEAM を研究開発していくことに意義はあるのか？」という問いに答える．
 
-\ref{sec:beyondErlangVM}節に述べたように，当面は既存の Erlang VM に機能付加する形で micro Elixir / ZEAM の研究開発を進める．この戦略は他の Erlang VM 互換のプログラミング言語処理系についても同様に考えることができる．すなわち，それらの処理系についても，Hastega (\ref{sec:Hastega}節) のような micro Elixir / ZEAM の機能を提供しうる．
+\ref{sec:smoothStrategy}節，\ref{sec:beyondErlangVM}節で述べたように，当面は Erlang VM に機能を後付けする形で研究開発を進めていくことから，Erlang VM の性能を高めたり，機能性を増したりする意義が充分あると考えている．
 
-一方で，Sabotender (\ref{sec:Sabotender}節)
-のように，NIF のような形で外付けしたり，現行の Erlang VM を修正して機能を取り入れることが難しいものも存在する．そこで，micro Elixir / ZEAM の最終形の1つとして，Erlang VM などの他の処理系に依存することのない，独立した処理系を提供することを考えている．実装が進み，micro Elixir の言語仕様の範囲を十分に広げて Elixir の処理系として実用上使える状態にまでなれば可能になるだろう．その主な目的の1つは，Erlang VM では実現できないような研究目標を達成することである．
-
+研究開発が進み，micro Elixir の言語仕様の範囲が十分に広がって Elixir の処理系として実用上使える状態になった段階で，Erlang VM から離れた独立した処理系を提供することを考えている．その主な目的の1つは，Erlang VM では実現できないような研究目標を達成することである．その段階まで達成できれば，さらに意義があると言えるだろう．
 
 # micro Elixir / ZEAM の基本構成
 \label{sec:architecture}
@@ -386,6 +374,36 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 
 さらに，I/O制御をデータベースのように，アトミックな処理を単位として記述し，場合によってはロールバックを可能にするというアイデアも考えている．これにより，デッドラインの関係上，どうしてもタスクの優先度逆転が生じてしまう場合に，優先度の低いタスクのI/O制御をアボートしたりロールバックしたりすることで，速やかに優先度の高いタスクへ制御権を渡すことが可能になる．これにより，よりデッドライン制約が厳しい場合でもデッドライン制約を満たすことが可能になると考えている．
 
+# 他の Erlang VM 互換処理系との関係性
+\label{sec:otherVM}
+
+本章では次のことについて述べる:
+
+* 関連研究: 他の Erlang VM 互換処理系 (\ref{sec:relatedWork}節)
+* 他の Erlang VM 互換処理系との関係性 (\ref{sec:relationToOtherVM}節)
+
+## 関連研究
+\label{sec:relatedWork}
+
+他の Erlang VM 互換の処理系の概要については以下の通りである: 
+
+* AtomVM \cite{AtomVM} は組込みシステム向けに開発された Erlang VM 互換の処理系である．マイコンボードでの実行を想定している．我々の実測では，AtomVM のバイナリイメージ(elf)のサイズは約676KBに収まっている．インタプリタ実行のため，低速である．
+
+* core_erlang \cite{CoreErlang} は Rustler \cite{Rustler} の作者による Erlang VM 互換処理系である．Rust \cite{Rust} を用いて実装しており，Core Erlang と名づけられた Erlang のサブセットプログラミング言語から低レベル中間表現(LIR)へのコンパイルと，LIRによるインタプリタ実行が行える．現時点では `unsafe` を用いていないため，メモリ安全・型安全である．インタプリタ実行のため，低速である．
+
+* Starlight \cite{Starlight} も Rust \cite{Rust} による Erlang VM 互換処理系である．Rust の特性を生かして，メモリ安全・型安全と高速性を両立し，かつできる限り GC が無くなるように設計・実装を進めている\cite{Starlight}\cite{StarlightRustImplement}．
+
+* Enigma \cite{Enigma} も Rust \cite{Rust} による Erlang VM 互換処理系である．Erlang 標準のコンパイラである `erlc` が生成する BEAM バイトコードを実行する．`unsafe` を使用しているため，完全にはメモリ安全・型安全ではない．
+
+## 他の Erlang VM 互換処理系との関係性
+\label{sec:relationToOtherVM}
+
+\ref{sec:beyondErlangVM}節に述べたように，当面は既存の Erlang VM に機能付加する形で micro Elixir / ZEAM の研究開発を進める．この戦略は他の Erlang VM 互換のプログラミング言語処理系についても同様に考えることができる．すなわち，それらの処理系についても，Hastega (\ref{sec:Hastega}節) のような micro Elixir / ZEAM の機能を提供しうる．
+
+一方で，Sabotender (\ref{sec:Sabotender}節)
+のように，NIF のような形で外付けしたり，現行の Erlang VM を修正して機能を取り入れることが難しいものも存在する．このような機能については，Erlang VM から独立した処理系を構築する際に取り入れる．
+
+
 # まとめと将来課題
 \label{sec:summary}
 
@@ -397,6 +415,7 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 * 第\ref{sec:architecture}章で，micro Elixir / ZEAM の基本構成と実装方針について解説した．
 * 第\ref{sec:parallelismCategories}章では Elixir コードから読取れる3種類の並列性について紹介し，この3分類に沿って，\ref{sec:instructionScheduling}節で命令並列性に基づく静的命令スケジューリングについて，\ref{sec:Hastega}節で CPU / GPU を統合して CPU バウンド処理を高速化する超並列高速実行処理系 Hastega について，\ref{sec:Sabotender}節で I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender についてそれぞれ紹介した．
 * 第\ref{sec:RealizationOfGlobalOptimization}章で，実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性の実現(\ref{sec:executionTimeEstimation}節)と，プロセス間通信を含む超インライン展開(\ref{sec:superInlining}節)について提案した後，それらを前提とした大域的なキャッシュメモリとI/Oの最適化の可能性について議論した(\ref{sec:globalOptimization}節)．
+* 第\ref{sec:otherVM}章で，他の Erlang VM 互換の処理系について概観した(\ref{sec:relatedWork}節)．また，それらに対しても我々の提案手法を可能な限り提供する方針であることを示した(\ref{sec:relationToOtherVM}節)．
 
 将来課題は実にたくさんある．
 
