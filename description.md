@@ -7,6 +7,11 @@ Elixir の高い並行・並列プログラミング能力と耐障害性を支�
 
 我々が本発表で提案する Elixir のサブセット言語であるプログラミング言語 micro Elixir とその処理系 ZEAM (ZACKY's Elixir Abstract Machine) では，そのような Erlang VM 互換の実現とは異なるアプローチで Elixir の処理系を開発する．
 
+micro Elixir / ZEAM の基本構成は次の通りである:
+
+* Elixir マクロを用いたメタプログラミング解析器
+* LLVM を用いたコード生成系
+
 我々が micro Elixir / ZEAM で掲げる野心的な研究目標は次の通りである:
 
 * 並列性に関わる最適化
