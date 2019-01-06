@@ -266,6 +266,35 @@ Hastega が目標としているのは，次のことである:
 * Sabotender と連携して計算負荷分散・スケジューリングを行う
 * Hastega の主要なアプリケーションとして，行列計算，線形回帰，機械学習，データ分析，レイトレーシングなどを想定している．これらのアプリケーションはベクタ計算を基調としており，Hastega による高速化を図りやすい．
 
+現在イメージしている Hastega のコード例を図\ref{fig:codeHastega}に示す．
+
+\begin{figure}[h]
+
+  \begin{center}
+    \begin{BVerbatim}
+defmodule SomeModule do
+  require Hastega
+  import Hastega
+
+  defhastega do
+    def func do
+		1..1_000_000
+		|> Enum.map(foo())
+		|> Enum.map(bar())
+		|> IO.inspect
+	end
+	hastegastub
+  end
+end
+    \end{BVerbatim}
+  \end{center}
+  \caption{Hastega のコード例}\label{fig:codeHastega}
+\end{figure}
+
+`require Hastega` は Hastega の処理系を有効にし，`import Hastega` は `Hastega.defhastega` などと書かずに `defhastega` とだけ書けばいいようにする．`defhastega` と `hastegastub` は Hastega に定義されているマクロである．`defhastega` は，続く `do` ブロック内を Hastega 処理系に渡す．`hastegastub` は，スタブコードを生成するマクロで，`defhastega` に続く `do` ブロック内で定義されている関数(ここでは `func`)それぞれについて，ネイティブコードと，Elixir からネイティブコードの呼出しをするスタブコードを生成する．
+
+`defhastega` にはオプションをつけることができ，CPU と GPU のどちらで実行するかやコードを実行するコア数などを指定することができる．オプションを指定しなかった場合には，適切に負荷分散するようにする．
+
 我々は micro Elixir / ZEAM が実現する最初の機能として，Hastega を選んだ．その理由は，実現した場合の訴求力が高いこと，Erlang VM から NIF を呼出す形で実現しやすいことが挙げられる．
 
 ## I/O バウンド処理を高速化する省メモリ並行プログラミング機構 Sabotender
@@ -417,12 +446,10 @@ Elixir は，オブジェクト指向プログラミング言語と異なり，�
 * 第\ref{sec:RealizationOfGlobalOptimization}章で，実行時間予測に基づく静的タスクスケジューリングとハードリアルタイム性の実現(\ref{sec:executionTimeEstimation}節)と，プロセス間通信を含む超インライン展開(\ref{sec:superInlining}節)について提案した後，それらを前提とした大域的なキャッシュメモリとI/Oの最適化の可能性について議論した(\ref{sec:globalOptimization}節)．
 * 第\ref{sec:otherVM}章で，他の Erlang VM 互換の処理系について概観した(\ref{sec:relatedWork}節)．また，それらに対しても我々の提案手法を可能な限り提供する方針であることを示した(\ref{sec:relationToOtherVM}節)．
 
-将来課題は実にたくさんある．
-
-まず着手するのは Hastega の実装である．`Enum.map` に対し，CPU の SIMD 命令の発行によるソフトウェア・パイプラインによる最適化を実装することから始める．そのためには，Elixir マクロを使って LLVM のコードを生成する実装を確立する必要がある．
+将来課題として，まず着手するのは Hastega の実装である．`Enum.map` に対し，CPU の SIMD 命令の発行によるソフトウェア・パイプラインによる最適化を実装することから始める．そのためには，Elixir マクロを使って LLVM のコードを生成する実装を確立する必要がある．
 
 次に，多くの提案機能を支えているのは実行時間予測である点が明らかになったことから，実行時間予測の実現に向けて，有限長のデータの走査を含むプログラム片を帰納的に構成したプログラムが必ず有限時間内で終了することを証明し，リアルタイム性の実現や，静的解析・形式検証技術などの綿密なサーベイを行った上で，実行時間予測を理論的に体系づけて設計・実装する．
 
 以上の実装と理論体系を整備した後であれば，各論の中から着手しやすい部分から順番に実装して研究開発を進めることが可能になると考えている．
 
-これらを前提に，今までの常識を打ち破るようなカーネルやVM，プロセッサアーキテクチャ，並列/分散コンピューティング，各種数学や機械学習を含む特定ドメイン向け最適化などの研究に取り組む．
+以上を前提に，今までの常識を打ち破るようなカーネルやVM，プロセッサアーキテクチャ，並列/分散コンピューティング，各種数学・機械学習等特定ドメイン向け最適化等の研究に取り組む．
